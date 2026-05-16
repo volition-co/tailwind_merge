@@ -13,4 +13,28 @@ class TestConfig < Minitest::Test
     assert_equal("auto", config[:class_groups]["overflow"].first["overflow"].first)
     refute(config[:class_groups]["overflow"].first[:nonexistent])
   end
+
+  def test_custom_config_is_not_mutated
+    config = {
+      theme: {
+        "spacing" => ["my-space"],
+      },
+    }
+
+    TailwindMerge::Merger.new(config:)
+
+    assert_equal({ theme: { "spacing" => ["my-space"] } }, config)
+  end
+
+  def test_custom_theme_does_not_leak_into_default_config
+    custom_merger = TailwindMerge::Merger.new(config: {
+      theme: {
+        "spacing" => ["my-space"],
+      },
+    })
+    default_merger = TailwindMerge::Merger.new
+
+    assert_equal("p-my-space", custom_merger.merge("p-3 p-my-space"))
+    assert_equal("p-my-space p-3", default_merger.merge("p-my-space p-3"))
+  end
 end
