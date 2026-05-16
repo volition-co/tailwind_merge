@@ -2444,7 +2444,8 @@ module TailwindMerge
     }.freeze
 
     def merge_config(incoming_config)
-      extended_config = TailwindMerge::Config::DEFAULTS.dup
+      incoming_config = deep_dup(incoming_config)
+      extended_config = deep_dup(TailwindMerge::Config::DEFAULTS)
 
       incoming_theme = incoming_config.delete(:theme) || {}
       # if the incoming config has a theme, we...
@@ -2456,6 +2457,19 @@ module TailwindMerge
       end
 
       extended_config.merge(incoming_config)
+    end
+
+    private def deep_dup(value)
+      case value
+      when Hash
+        value.each_with_object({}) do |(key, inner_value), duplicate|
+          duplicate[key] = deep_dup(inner_value)
+        end
+      when Array
+        value.map { |inner_value| deep_dup(inner_value) }
+      else
+        value
+      end
     end
   end
 end
